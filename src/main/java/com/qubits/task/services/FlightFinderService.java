@@ -42,7 +42,15 @@ public class FlightFinderService {
     var arrivalDate = new CustomDate(arrival);
     Map<Integer, List<Integer>> yearMonthPairs = getPairs(departureDate, arrivalDate);
     Map<Route, List<Schedule>> routesScheds = new HashMap<>();
-    possibleRoutes.forEach(r -> routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs)));
+    possibleRoutes.forEach(r -> {
+      if (Objects.equals(r.getConnectingAirport(), null)) {
+        routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs));
+      } else {
+        // For interconnected flights the difference between the arrival and the next departure
+        // should be 2h or greater
+        ???????????????????????????????????????????????????????????????????????????????????????
+      }
+    });
     return mapScheduledToInterconnections(routesScheds);
   }
 
@@ -58,8 +66,7 @@ public class FlightFinderService {
     return Optional.of(airlineClient.fetchRoutes(airportFrom))
         .orElse(Collections.emptyList())
         .stream()
-        .filter(r -> Objects.equals(r.getOperator(), RYAN_AIR) && Objects.equals(null, r.getConnectingAirport()) &&
-            Objects.equals(r.getAirportTo(), to))
+        .filter(r -> Objects.equals(r.getOperator(), RYAN_AIR) && Objects.equals(r.getAirportTo(), to))
         .collect(Collectors.toList());
   }
 
@@ -68,9 +75,6 @@ public class FlightFinderService {
     var params = new HashMap<>(Map.of("airportFrom", airportFrom, "airportTo", airportTo));
     yearMonthPairs.forEach((year, months) -> response.addAll(airlineClient.fetchSchedules(airportFrom, airportTo, year,
         months, params)));
-    // For interconnected flights the difference between the arrival and the next departure
-    // should be 2h or greater
-    response.stream().filter()
     return response;
   }
 

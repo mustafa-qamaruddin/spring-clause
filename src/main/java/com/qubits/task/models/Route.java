@@ -1,12 +1,10 @@
 package com.qubits.task.models;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 public class Route {
   private String airportFrom, airportTo, operator, carrierCode, group, connectingAirport;
   private boolean newRoute, seasonalRoute;

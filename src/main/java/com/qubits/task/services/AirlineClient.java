@@ -3,6 +3,7 @@ package com.qubits.task.services;
 import com.qubits.task.exceptions.ThirdPartyErrorException;
 import com.qubits.task.models.Route;
 import com.qubits.task.models.Schedule;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
@@ -11,11 +12,11 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class AirlineClient {
   private final WebClient routesWebClient;
   private final WebClient schedulesWebClient;
@@ -41,16 +42,22 @@ public class AirlineClient {
     var response = routesWebClient.get().uri(endpoint + airportFrom).retrieve()
         .onStatus(
             HttpStatus::is5xxServerError,
-            clientResponse -> Mono.error(new ThirdPartyErrorException(
-                "Failed to fetch routes list", params))
+            clientResponse -> {
+              log.error("Failed to fetch routes list" + clientResponse.toString());
+              return Mono.error(new ThirdPartyErrorException("Failed to fetch routes list", params));
+            }
         ).onStatus(
             HttpStatus::is4xxClientError,
-            clientResponse -> Mono.error(new ThirdPartyErrorException(
-                "Invalid parameters used on routes list", params))
+            clientResponse -> {
+              log.error("Invalid parameters used on routes list" + clientResponse.toString());
+              return Mono.error(new ThirdPartyErrorException("Invalid parameters used on routes list", params));
+            }
         ).onStatus(
             HttpStatus::is3xxRedirection,
-            clientResponse -> Mono.error(new ThirdPartyErrorException(
-                "Contact support, routes APIs changed", params))
+            clientResponse -> {
+              log.error("Contact support, routes APIs changed" + clientResponse.toString());
+              return Mono.error(new ThirdPartyErrorException("Contact support, routes APIs changed", params));
+            }
         ).bodyToMono(new ParameterizedTypeReference<List<Route>>() {
         }).block();
 
@@ -59,6 +66,7 @@ public class AirlineClient {
       cacheLastUpdated.put(airportFrom, System.currentTimeMillis());
       return cachedRoutes.get(airportFrom);
     } else {
+      log.error("No routes exist" + params);
       throw new ThirdPartyErrorException("No routes exist", params);
     }
   }
@@ -68,7 +76,7 @@ public class AirlineClient {
     var endpoint = "/3/schedules/{airportFrom}/{airportTo}/years/{year}/months/{year}";
     params.put("year", String.valueOf(year));
     List<Schedule> response = new ArrayList<>();
-    Arrays.stream(months).forEach(month -> {
+    months.forEach(month -> {
       params.put("month", String.valueOf(month));
       response.addAll(getSchedulesBetween(airportFrom, airportTo, year, month, endpoint, params));
     });
@@ -80,16 +88,22 @@ public class AirlineClient {
     return schedulesWebClient.get().uri(endpoint, airportFrom, airportTo, year, month).retrieve()
         .onStatus(
             HttpStatus::is5xxServerError,
-            clientResponse -> Mono.error(new ThirdPartyErrorException(
-                "Failed to fetch schedules list", params))
+            clientResponse -> {
+              log.error("Failed to fetch schedules list" + clientResponse.toString());
+              return Mono.error(new ThirdPartyErrorException("Failed to fetch schedules list", params));
+            }
         ).onStatus(
             HttpStatus::is4xxClientError,
-            clientResponse -> Mono.error(new ThirdPartyErrorException(
-                "Invalid parameters used on schedules list", params))
+            clientResponse -> {
+              log.error("Invalid parameters used on schedules list" + clientResponse.toString());
+              return Mono.error(new ThirdPartyErrorException("Invalid parameters used on schedules list", params));
+            }
         ).onStatus(
             HttpStatus::is3xxRedirection,
-            clientResponse -> Mono.error(new ThirdPartyErrorException(
-                "Contact support, schedules APIs changed", params))
+            clientResponse -> {
+              log.error("Contact support, schedules APIs changed" + clientResponse.toString());
+              return Mono.error(new ThirdPartyErrorException("Contact support, schedules APIs changed", params));
+            }
         ).bodyToMono(new ParameterizedTypeReference<List<Schedule>>() {
         }).block();
   }
