@@ -59,7 +59,7 @@ public class Dependencies {
 
   @Bean
   public FlightFinderService flightFinderService() {
-    return new FlightFinderService(airlineClient());
+    return new FlightFinderService(airlineClient(), timeZoneUtils());
   }
 
   @Bean

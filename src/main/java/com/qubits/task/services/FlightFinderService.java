@@ -1,14 +1,17 @@
 package com.qubits.task.services;
 
+import com.qubits.task.models.pojos.Leg;
 import com.qubits.task.utils.CustomDate;
 import com.qubits.task.models.pojos.Interconnection;
 import com.qubits.task.models.dtos.Route;
 import com.qubits.task.models.dtos.Schedule;
+import com.qubits.task.utils.TimeZoneUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,9 +27,11 @@ import static com.qubits.task.configs.Constants.RYAN_AIR;
 @Slf4j
 public class FlightFinderService {
   private final AirlineClient airlineClient;
+  private final TimeZoneUtils timeZoneUtils;
 
-  public FlightFinderService(AirlineClient airlineClient) {
+  public FlightFinderService(AirlineClient airlineClient, TimeZoneUtils timeZoneUtils) {
     this.airlineClient = airlineClient;
+    this.timeZoneUtils = timeZoneUtils;
   }
 
   public List<Interconnection> findInterconnections(
@@ -41,12 +46,13 @@ public class FlightFinderService {
     Map<Integer, List<Integer>> yearMonthPairs = getPairs(departureDate, arrivalDate);
     Map<Route, List<Schedule>> routesScheds = new HashMap<>();
     possibleRoutes.forEach(r -> {
-      if (Objects.equals(r.getConnectingAirport(), null)) {
+      if (Objects.isNull(r.getConnectingAirport())) { // @todo unnecessary condition, maybe here put the map(transitLeg1, transitLeg2)
         routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs));
       } else {
         // For interconnected flights the difference between the arrival and the next departure
         // should be 2h or greater
 //        ???????????????????????????????????????????????????????????????????????????????????????
+        routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs));
       }
     });
     return mapScheduledToInterconnections(routesScheds);
@@ -54,7 +60,33 @@ public class FlightFinderService {
 
   private List<Interconnection> mapScheduledToInterconnections(Map<Route, List<Schedule>> routesScheds) {
     List<Interconnection> interconnections = new ArrayList<>();
-
+    routesScheds.forEach((route, schedules) -> {
+      if (Objects.isNull(route.getConnectingAirport())) {
+        // if isTransit? map find for a given route the other routes that start from it ( get the routes earlier to avoid nested loops)
+        // condition no transit > 2 hours
+        // extract flights and link to legs
+      }
+      // extract days
+      schedules.forEach(sched -> {
+        sched.getDays().forEach(day -> {
+          // extract flights for day
+          day.getFlights().forEach(flight -> {
+            // create legs
+            Leg leg = new Leg();
+            leg.setDepartureAirport(route.getAirportFrom());
+            leg.setArrivalAirport(route.getAirportTo());
+            leg.setDepartureDateTime(timeZoneUtils.stitchDateParts(sched.getYear(), sched.getMonth(), day.getDay(),
+                flight.getDepartureTime()));
+            leg.setArrivalDateTime(timeZoneUtils.stitchDateParts(sched.getYear(), sched.getMonth(), day.getDay(),
+                flight.getArrivalTime()));
+            // assign legs to interconnection
+            Interconnection i = new Interconnection().addLeg(leg);
+            interconnections.add(i);
+          });
+        });
+      });
+      // @todo make sure results are properly sorted
+    });
     return interconnections;
   }
 

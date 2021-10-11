@@ -1,5 +1,6 @@
 package com.qubits.task.models.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -11,4 +12,11 @@ public class Schedule {
   int month;
   @JsonProperty("days")
   List<MonthPayload> days;
+  @JsonIgnore
+  int year;
+
+  public Schedule setYear(int y) {
+    this.year = y;
+    return this;
+  }
 }

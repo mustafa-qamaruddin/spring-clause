@@ -77,7 +77,7 @@ public class AirlineClient {
     List<Schedule> response = new ArrayList<>();
     months.forEach(month -> {
       params.put("month", String.valueOf(month));
-      response.add(getSchedulesBetween(airportFrom, airportTo, year, month, endpoint, params));
+      response.add(getSchedulesBetween(airportFrom, airportTo, year, month, endpoint, params).setYear(year));
     });
     return response;
   }
