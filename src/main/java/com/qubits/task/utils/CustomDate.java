@@ -1,4 +1,4 @@
-package com.qubits.task.models;
+package com.qubits.task.utils;
 
 import java.util.Date;
 import java.util.TimeZone;
@@ -48,7 +48,7 @@ public class CustomDate {
     if (this.getYear() < d.getYear())
       start = d.getYear();
     int j = 0;
-    for (int i = start; i <= start + diff; i++) {
+    for (int i = start; i < start + diff; i++) {
       ret[j] = i;
       j++;
     }
@@ -59,7 +59,7 @@ public class CustomDate {
     int numMonths = untilMonth - this.getMonth() + 1;
     int[] months = new int[numMonths];
     int j = 0;
-    for (int i = this.getMonth(); i < numMonths; i++) {
+    for (int i = this.getMonth(); i < this.getMonth() + numMonths; i++) {
       months[j] = i;
       j++;
     }

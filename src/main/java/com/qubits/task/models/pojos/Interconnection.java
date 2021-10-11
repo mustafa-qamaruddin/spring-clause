@@ -1,4 +1,4 @@
-package com.qubits.task.models;
+package com.qubits.task.models.pojos;
 
 import lombok.Data;
 

@@ -1,8 +1,8 @@
 package com.qubits.task.services;
 
 import com.qubits.task.exceptions.ThirdPartyErrorException;
-import com.qubits.task.models.Route;
-import com.qubits.task.models.Schedule;
+import com.qubits.task.models.dtos.Route;
+import com.qubits.task.models.dtos.Schedule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -11,7 +11,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,13 +77,13 @@ public class AirlineClient {
     List<Schedule> response = new ArrayList<>();
     months.forEach(month -> {
       params.put("month", String.valueOf(month));
-      response.addAll(getSchedulesBetween(airportFrom, airportTo, year, month, endpoint, params));
+      response.add(getSchedulesBetween(airportFrom, airportTo, year, month, endpoint, params));
     });
     return response;
   }
 
-  private List<Schedule> getSchedulesBetween(String airportFrom, String airportTo, int year, int month, String endpoint,
-                                             Map<String, String> params) {
+  private Schedule getSchedulesBetween(String airportFrom, String airportTo, int year, int month, String endpoint,
+                                       Map<String, String> params) {
     return schedulesWebClient.get().uri(endpoint, airportFrom, airportTo, year, month).retrieve()
         .onStatus(
             HttpStatus::is5xxServerError,
@@ -104,7 +103,6 @@ public class AirlineClient {
               log.error("Contact support, schedules APIs changed" + clientResponse.toString());
               return Mono.error(new ThirdPartyErrorException("Contact support, schedules APIs changed", params));
             }
-        ).bodyToMono(new ParameterizedTypeReference<List<Schedule>>() {
-        }).block();
+        ).bodyToMono(Schedule.class).block();
   }
 }

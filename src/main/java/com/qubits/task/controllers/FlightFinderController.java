@@ -1,6 +1,6 @@
 package com.qubits.task.controllers;
 
-import com.qubits.task.models.Interconnection;
+import com.qubits.task.models.pojos.Interconnection;
 import com.qubits.task.services.FlightFinderService;
 import com.qubits.task.utils.SearchFormUtils;
 import com.qubits.task.utils.constraints.DateTimeFormatConstraint;
