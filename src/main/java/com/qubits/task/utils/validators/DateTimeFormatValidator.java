@@ -1,15 +1,16 @@
 package com.qubits.task.utils.validators;
 
 import com.qubits.task.utils.constraints.DateTimeFormatConstraint;
+import org.springframework.stereotype.Component;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import javax.validation.ValidationException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import static com.qubits.task.configs.Constants.DATETIME_FORMAT;
 
+@Component
 public class DateTimeFormatValidator implements ConstraintValidator<DateTimeFormatConstraint, String> {
 
   @Override

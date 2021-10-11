@@ -12,9 +12,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
+import javax.validation.Validator;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -105,5 +108,17 @@ public class Dependencies {
   @Bean
   TimeZoneUtils timeZoneUtils() {
     return new TimeZoneUtils(timezone);
+  }
+
+  @Bean
+  public Validator validator() {
+    return new LocalValidatorFactoryBean();
+  }
+
+  @Bean
+  public MethodValidationPostProcessor methodValidationPostProcessor() {
+    MethodValidationPostProcessor methodValidationPostProcessor = new MethodValidationPostProcessor();
+    methodValidationPostProcessor.setValidator(validator());
+    return methodValidationPostProcessor;
   }
 }

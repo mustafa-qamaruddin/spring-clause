@@ -1,6 +1,6 @@
 package com.qubits.task.utils.constraints;
 
-import com.qubits.task.utils.validators.DateTimeFormatValidator;
+import com.qubits.task.utils.validators.DateTimeFutureValidator;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -11,7 +11,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Documented
-@Constraint(validatedBy = DateTimeFormatValidator.class)
+@Constraint(validatedBy = DateTimeFutureValidator.class)
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DateTimeFutureConstraint {
