@@ -2,7 +2,8 @@ package com.qubits.task.configs;
 
 import com.qubits.task.services.AirlineClient;
 import com.qubits.task.services.FlightFinderService;
-import com.qubits.task.utils.ValidationUtils;
+import com.qubits.task.utils.TimeZoneUtils;
+import com.qubits.task.utils.SearchFormUtils;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -64,8 +65,8 @@ public class Dependencies {
   }
 
   @Bean
-  public ValidationUtils validationUtils() {
-    return new ValidationUtils(timezone);
+  public SearchFormUtils validationUtils() {
+    return new SearchFormUtils(timeZoneUtils());
   }
 
   @Bean
@@ -99,5 +100,10 @@ public class Dependencies {
             conn.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS))
                 .addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS))
         );
+  }
+
+  @Bean
+  TimeZoneUtils timeZoneUtils() {
+    return new TimeZoneUtils(timezone);
   }
 }

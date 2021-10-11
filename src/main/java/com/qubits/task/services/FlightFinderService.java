@@ -10,12 +10,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import static com.qubits.task.configs.CONSTANTS.RYAN_AIR;
-import static java.util.Optional.ofNullable;
-import static java.util.TimeZone.*;
+import static com.qubits.task.configs.Constants.RYAN_AIR;
 
 public class FlightFinderService {
   private final AirlineClient airlineClient;

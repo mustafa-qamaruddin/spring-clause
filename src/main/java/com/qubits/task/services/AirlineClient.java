@@ -40,6 +40,8 @@ public class AirlineClient {
     }).block();
 
     // @todo error handling
+    // @todo handle not found error
+    // @todo validation on IATA codes
 
     if (response != null) {
       cachedRoutes.put(airportFrom, response);
