@@ -30,4 +30,10 @@ public class SearchFormUtils {
     });
     return dates;
   }
+
+  public void isDepartureAlwaysBeforeArrival(Date departure, Date arrival) {
+    if (departure.compareTo(arrival) > 0) {
+//      throw new ;
+    }
+  }
 }

@@ -1,4 +1,4 @@
 airlines:
   timezone: Europe/Madrid
   routesAPI: https://services-api.ryanair.com
-  schedulesAPI: https://timtbl-api.ryanair.com/3/schedules
+  schedulesAPI: https://timtbl-api.ryanair.com

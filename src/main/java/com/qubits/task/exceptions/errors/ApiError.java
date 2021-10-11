@@ -50,7 +50,7 @@ class ApiError {
     this.debugMessage = ex.getLocalizedMessage();
   }
 
-  private void addSubError(ApiSubError subError) {
+  public void addSubError(ApiSubError subError) {
     if (subErrors == null) {
       subErrors = new ArrayList<>();
     }

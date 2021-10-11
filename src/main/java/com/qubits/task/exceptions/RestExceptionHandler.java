@@ -1,6 +1,7 @@
 package com.qubits.task.exceptions;
 
 import com.qubits.task.exceptions.errors.ApiError;
+import com.qubits.task.exceptions.errors.ApiValidationError;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,7 +45,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     String error = ex.getParameterName() + " parameter is missing";
     return buildResponseEntity(new ApiError(BAD_REQUEST, error, ex));
   }
-
 
   /**
    * Handle HttpMediaTypeNotSupportedException. This one triggers when JSON is invalid as well.
@@ -161,6 +161,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
   @ExceptionHandler(javax.persistence.EntityNotFoundException.class)
   protected ResponseEntity<Object> handleEntityNotFound(javax.persistence.EntityNotFoundException ex) {
     return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND, ex));
+  }
+
+  /**
+   * Handle ThirdPartyErrorException
+   */
+  @ExceptionHandler(ThirdPartyErrorException.class)
+  protected ResponseEntity<Object> handleThirdPartyErrorException(ThirdPartyErrorException ex) {
+    var apiError = new ApiError(HttpStatus.NOT_FOUND, ex);
+    ex.getErrors().forEach((k, v) -> apiError.addSubError(new ApiValidationError(k, v)));
+    return buildResponseEntity(apiError);
   }
 
   /**
