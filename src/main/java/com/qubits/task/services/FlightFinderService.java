@@ -62,9 +62,8 @@ public class FlightFinderService {
     loopCreateInterconnections(routesSchedsSecond, interconnections, false);
     // filter out the visited ones and surely the transits without second leg
     return interconnections.stream()
-        .filter(interconnection -> !interconnection.isVisited())
-        .filter(interconnection -> interconnection.isTransit() && interconnection.getStops() > 0
-            && interconnection.getLegs().size() == 2)
+        .filter(interconnection -> !interconnection.isTransit() || (interconnection.isTransit()
+            && !interconnection.isVisited() && interconnection.getStops() > 0 && interconnection.getLegs().size() == 2))
         .collect(Collectors.toList());
   }
 
@@ -93,9 +92,9 @@ public class FlightFinderService {
             } else {
               // now we are sure this is the second leg
               // but there could be more than one match
-              // copy interconnection and then set second leg and add to list
+              // copy interconnection, mark it as visited, and then set second leg and add to list
               // finally in the caller function filter out the transits without second leg
-              interconnections.stream()
+              var validCandidates = interconnections.stream()
                   .filter(interconnection -> interconnection.isTransit() && interconnection.getLegs().size() == 1
                       && !interconnection.isVisited())
                   .filter(interconnection -> {
@@ -104,7 +103,9 @@ public class FlightFinderService {
                     return diffInMins <= MAX_TRANSIT_WAIT_MIN;
                   })
                   .map(interconnection -> interconnection.setVisited(true))
-                  .forEach(interconnection -> interconnection.incrementStops().addLeg(leg));
+                  .collect(Collectors.toList());
+              validCandidates.forEach(interconnection -> interconnections.add(new Interconnection(interconnection)
+                  .incrementStops().addLeg(leg).setVisited(false)));
             }
           });
         });

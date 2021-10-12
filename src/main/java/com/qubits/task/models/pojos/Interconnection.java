@@ -16,6 +16,16 @@ public class Interconnection {
   @JsonIgnore
   boolean isVisited;
 
+  public Interconnection() {
+  }
+
+  public Interconnection(Interconnection interconnection) {
+    this.stops = interconnection.stops;
+    this.isTransit = interconnection.isTransit;
+    this.legs = new ArrayList<>();
+    this.legs.addAll(interconnection.getLegs());
+  }
+
   public Interconnection incrementStops() {
     stops++;
     return this;
