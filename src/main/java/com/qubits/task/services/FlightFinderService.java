@@ -83,10 +83,11 @@ public class FlightFinderService {
           // extract flights for day
           day.getFlights().forEach(flight -> {
             // create legs
-            Leg leg = getLeg(route, flight);
+            boolean isTransit = !Objects.isNull(route.getConnectingAirport());
+            Leg leg = getLeg(route, flight, isFirstLeg, isTransit);
             // assign legs to interconnection
             if (isFirstLeg) {
-              Interconnection i = new Interconnection().addLeg(leg).setTransit(!Objects.isNull(route.getConnectingAirport()))
+              Interconnection i = new Interconnection().addLeg(leg).setTransit(isTransit)
                   .setVisited(false);
               interconnections.add(i);
             } else {
@@ -113,10 +114,18 @@ public class FlightFinderService {
     });
   }
 
-  private Leg getLeg(Route route, Flight flight) {
+  private Leg getLeg(Route route, Flight flight, boolean isFirstLeg, boolean isTransit) {
     Leg leg = new Leg();
-    leg.setDepartureAirport(route.getAirportFrom());
-    leg.setArrivalAirport(route.getAirportTo());
+    if (isFirstLeg && isTransit) {
+      leg.setDepartureAirport(route.getAirportFrom());
+      leg.setArrivalAirport(route.getConnectingAirport());
+    } else if (!isFirstLeg && isTransit) {
+      leg.setDepartureAirport(route.getConnectingAirport());
+      leg.setArrivalAirport(route.getAirportTo());
+    } else {
+      leg.setDepartureAirport(route.getAirportFrom());
+      leg.setArrivalAirport(route.getAirportTo());
+    }
     leg.setDepartureDateTime(timeZoneUtils.formatDate(flight.getStitchedDepartureDateTime()));
     leg.setArrivalDateTime(timeZoneUtils.formatDate(flight.getStitchedArrivalDateTime()));
     leg.setArrivalDateTimeRaw(flight.getStitchedArrivalDateTime());
