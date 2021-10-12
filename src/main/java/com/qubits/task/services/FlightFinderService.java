@@ -1,5 +1,6 @@
 package com.qubits.task.services;
 
+import com.qubits.task.models.dtos.Flight;
 import com.qubits.task.models.pojos.Leg;
 import com.qubits.task.utils.CustomDate;
 import com.qubits.task.models.pojos.Interconnection;
@@ -47,12 +48,12 @@ public class FlightFinderService {
     Map<Route, List<Schedule>> routesScheds = new HashMap<>();
     possibleRoutes.forEach(r -> {
       if (Objects.isNull(r.getConnectingAirport())) { // @todo unnecessary condition, maybe here put the map(transitLeg1, transitLeg2)
-        routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs));
+        routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs, departureDate, arrivalDate));
       } else {
         // For interconnected flights the difference between the arrival and the next departure
         // should be 2h or greater
 //        ???????????????????????????????????????????????????????????????????????????????????????
-        routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs));
+        routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs, departureDate, arrivalDate));
       }
     });
     return mapScheduledToInterconnections(routesScheds);
@@ -75,10 +76,8 @@ public class FlightFinderService {
             Leg leg = new Leg();
             leg.setDepartureAirport(route.getAirportFrom());
             leg.setArrivalAirport(route.getAirportTo());
-            leg.setDepartureDateTime(timeZoneUtils.stitchDateParts(sched.getYear(), sched.getMonth(), day.getDay(),
-                flight.getDepartureTime()));
-            leg.setArrivalDateTime(timeZoneUtils.stitchDateParts(sched.getYear(), sched.getMonth(), day.getDay(),
-                flight.getArrivalTime()));
+            leg.setDepartureDateTime(timeZoneUtils.formatDate(flight.getStitchedDepartureDateTime()));
+            leg.setArrivalDateTime(timeZoneUtils.formatDate(flight.getStitchedArrivalDateTime()));
             // assign legs to interconnection
             Interconnection i = new Interconnection().addLeg(leg);
             interconnections.add(i);
@@ -100,12 +99,29 @@ public class FlightFinderService {
         .collect(Collectors.toList());
   }
 
-  public List<Schedule> getSchedules(String airportFrom, String airportTo, Map<Integer, List<Integer>> yearMonthPairs) {
-    var response = new ArrayList<Schedule>();
+  public List<Schedule> getSchedules(String airportFrom, String airportTo, Map<Integer, List<Integer>> yearMonthPairs,
+                                     CustomDate desiredDepature, CustomDate desiredArrival) {
+    var scheduleArrayList = new ArrayList<Schedule>();
     var params = new HashMap<>(Map.of("airportFrom", airportFrom, "airportTo", airportTo));
-    yearMonthPairs.forEach((year, months) -> response.addAll(airlineClient.fetchSchedules(airportFrom, airportTo, year,
-        months, params)));
-    return response;
+    yearMonthPairs.forEach((year, months) -> {
+      var schedules = airlineClient.fetchSchedules(airportFrom, airportTo, year, months, params);
+      schedules.forEach(sched -> {
+        sched.getDays().forEach(day -> {
+          var filteredFlights = day.getFlights().stream().map(flight -> {
+                flight.setStitchedDepartureDateTime(timeZoneUtils.stitchDateParts(sched.getYear(), sched.getMonth(),
+                        day.getDay(), flight.getDepartureTime()))
+                    .setStitchedArrivalDateTime(timeZoneUtils.stitchDateParts(sched.getYear(), sched.getMonth(),
+                        day.getDay(), flight.getArrivalTime()));
+                return flight;
+              }).filter(flight -> flight.getStitchedDepartureDateTime().compareTo(desiredDepature.getRawDate()) > 0 &&
+                  flight.getStitchedArrivalDateTime().compareTo(desiredArrival.getRawDate()) < 0)
+              .collect(Collectors.toList());
+          day.setFlights(filteredFlights);
+        });
+      });
+      scheduleArrayList.addAll(schedules);
+    });
+    return scheduleArrayList;
   }
 
   public Map<Integer, List<Integer>> getPairs(CustomDate start, CustomDate end) {
