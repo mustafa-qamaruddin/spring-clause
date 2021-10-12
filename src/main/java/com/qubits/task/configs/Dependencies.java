@@ -95,9 +95,6 @@ public class Dependencies {
     return HttpClient.create()
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
         .option(ChannelOption.SO_KEEPALIVE, true)
-        .option(EpollChannelOption.TCP_KEEPIDLE, 300)
-        .option(EpollChannelOption.TCP_KEEPINTVL, 60)
-        .option(EpollChannelOption.TCP_KEEPCNT, 8)
         .responseTimeout(Duration.ofMillis(5000))
         .doOnConnected(conn ->
             conn.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS))

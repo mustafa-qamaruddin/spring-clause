@@ -1,6 +1,7 @@
 package com.qubits.task.models.pojos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -12,8 +13,10 @@ public class Interconnection {
   List<Leg> legs;
 
   @JsonIgnore
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   boolean isTransit;
   @JsonIgnore
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   boolean isVisited;
 
   public Interconnection() {
@@ -40,12 +43,12 @@ public class Interconnection {
   }
 
   public Interconnection setTransit(boolean isTransit) {
-    this.isTransit = true;
+    this.isTransit = isTransit;
     return this;
   }
 
   public Interconnection setVisited(boolean isVisited) {
-    this.isVisited = true;
+    this.isVisited = isVisited;
     return this;
   }
 }
