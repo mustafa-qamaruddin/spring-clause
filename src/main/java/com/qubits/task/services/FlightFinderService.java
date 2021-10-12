@@ -12,7 +12,6 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.qubits.task.configs.Constants.MAX_TRANSIT_WAIT_MIN;
 import static com.qubits.task.configs.Constants.RYAN_AIR;
 
 @Slf4j
@@ -45,48 +45,81 @@ public class FlightFinderService {
     var departureDate = new CustomDate(departure);
     var arrivalDate = new CustomDate(arrival);
     Map<Integer, List<Integer>> yearMonthPairs = getPairs(departureDate, arrivalDate);
-    Map<Route, List<Schedule>> routesScheds = new HashMap<>();
+    Map<Route, List<Schedule>> routesSchedsFirst = new HashMap<>();
+    Map<Route, List<Schedule>> routesSchedsSecond = new HashMap<>();
     possibleRoutes.forEach(r -> {
-      if (Objects.isNull(r.getConnectingAirport())) { // @todo unnecessary condition, maybe here put the map(transitLeg1, transitLeg2)
-        routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs, departureDate, arrivalDate));
+      if (Objects.isNull(r.getConnectingAirport())) {
+        routesSchedsFirst.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs, departureDate, arrivalDate));
       } else {
         // For interconnected flights the difference between the arrival and the next departure
         // should be 2h or greater
-//        ???????????????????????????????????????????????????????????????????????????????????????
-        routesScheds.put(r, getSchedules(r.getAirportFrom(), r.getAirportTo(), yearMonthPairs, departureDate, arrivalDate));
+        routesSchedsFirst.put(r, getSchedules(r.getAirportFrom(), r.getConnectingAirport(), yearMonthPairs, departureDate, arrivalDate));
+        routesSchedsSecond.put(r, getSchedules(r.getConnectingAirport(), r.getAirportTo(), yearMonthPairs, departureDate, arrivalDate));
       }
     });
-    return mapScheduledToInterconnections(routesScheds);
+    var interconnections = mapScheduledToInterconnections(routesSchedsFirst);
+    // add second leg
+    loopCreateInterconnections(routesSchedsSecond, interconnections, false);
+    // filter out the visited ones and surely the transits without second leg
+    return interconnections.stream()
+        .filter(interconnection -> !interconnection.isVisited())
+        .filter(interconnection -> interconnection.isTransit() && interconnection.getStops() > 0
+            && interconnection.getLegs().size() == 2)
+        .collect(Collectors.toList());
   }
 
   private List<Interconnection> mapScheduledToInterconnections(Map<Route, List<Schedule>> routesScheds) {
+    // only put first leg in this iteration
     List<Interconnection> interconnections = new ArrayList<>();
+    loopCreateInterconnections(routesScheds, interconnections, true);
+    return interconnections;
+  }
+
+  private void loopCreateInterconnections(Map<Route, List<Schedule>> routesScheds, List<Interconnection> interconnections,
+                                          boolean isFirstLeg) {
     routesScheds.forEach((route, schedules) -> {
-      if (Objects.isNull(route.getConnectingAirport())) {
-        // if isTransit? map find for a given route the other routes that start from it ( get the routes earlier to avoid nested loops)
-        // condition no transit > 2 hours
-        // extract flights and link to legs
-      }
       // extract days
       schedules.forEach(sched -> {
         sched.getDays().forEach(day -> {
           // extract flights for day
           day.getFlights().forEach(flight -> {
             // create legs
-            Leg leg = new Leg();
-            leg.setDepartureAirport(route.getAirportFrom());
-            leg.setArrivalAirport(route.getAirportTo());
-            leg.setDepartureDateTime(timeZoneUtils.formatDate(flight.getStitchedDepartureDateTime()));
-            leg.setArrivalDateTime(timeZoneUtils.formatDate(flight.getStitchedArrivalDateTime()));
+            Leg leg = getLeg(route, flight);
             // assign legs to interconnection
-            Interconnection i = new Interconnection().addLeg(leg);
-            interconnections.add(i);
+            if (isFirstLeg) {
+              Interconnection i = new Interconnection().addLeg(leg).setTransit(!Objects.isNull(route.getConnectingAirport()))
+                  .setVisited(false);
+              interconnections.add(i);
+            } else {
+              // now we are sure this is the second leg
+              // but there could be more than one match
+              // copy interconnection and then set second leg and add to list
+              // finally in the caller function filter out the transits without second leg
+              interconnections.stream()
+                  .filter(interconnection -> interconnection.isTransit() && interconnection.getLegs().size() == 1
+                      && !interconnection.isVisited())
+                  .filter(interconnection -> {
+                    long diffInMins = (flight.getStitchedDepartureDateTime().getTime() -
+                        interconnection.getLegs().get(0).getArrivalDateTimeRaw().getTime()) / (60 * 1000) % 60;
+                    return diffInMins <= MAX_TRANSIT_WAIT_MIN;
+                  })
+                  .map(interconnection -> interconnection.setVisited(true))
+                  .forEach(interconnection -> interconnection.incrementStops().addLeg(leg));
+            }
           });
         });
       });
-      // @todo make sure results are properly sorted
     });
-    return interconnections;
+  }
+
+  private Leg getLeg(Route route, Flight flight) {
+    Leg leg = new Leg();
+    leg.setDepartureAirport(route.getAirportFrom());
+    leg.setArrivalAirport(route.getAirportTo());
+    leg.setDepartureDateTime(timeZoneUtils.formatDate(flight.getStitchedDepartureDateTime()));
+    leg.setArrivalDateTime(timeZoneUtils.formatDate(flight.getStitchedArrivalDateTime()));
+    leg.setArrivalDateTimeRaw(flight.getStitchedArrivalDateTime());
+    return leg;
   }
 
   public List<Route> getPossibleRoutes(String airportFrom, String to) {
