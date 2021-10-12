@@ -46,7 +46,7 @@ public class CustomDate {
     int[] ret = new int[diff];
     var start = d.getYear();
     if (this.getYear() < d.getYear())
-      start = d.getYear();
+      start = this.getYear();
     int j = 0;
     for (int i = start; i < start + diff; i++) {
       ret[j] = i;

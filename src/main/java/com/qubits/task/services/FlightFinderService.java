@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.qubits.task.configs.Constants.MAX_TRANSIT_WAIT_MIN;
+import static com.qubits.task.configs.Constants.MIN_TRANSIT_WAIT;
 import static com.qubits.task.configs.Constants.RYAN_AIR;
 
 @Slf4j
@@ -100,8 +100,8 @@ public class FlightFinderService {
                       && !interconnection.isVisited())
                   .filter(interconnection -> {
                     long diffInMins = (flight.getStitchedDepartureDateTime().getTime() -
-                        interconnection.getLegs().get(0).getArrivalDateTimeRaw().getTime()) / (60 * 1000) % 60;
-                    return diffInMins <= MAX_TRANSIT_WAIT_MIN;
+                        interconnection.getLegs().get(0).getArrivalDateTimeRaw().getTime()) / 60000;
+                    return diffInMins >= MIN_TRANSIT_WAIT;
                   })
                   .map(interconnection -> interconnection.setVisited(true))
                   .collect(Collectors.toList());
@@ -168,8 +168,7 @@ public class FlightFinderService {
   }
 
   public Map<Integer, List<Integer>> getPairs(CustomDate start, CustomDate end) {
-    // @todo make sure start is always before end
-    // @todo validation done early in form utils
+    // validation done early in form utils makes sure start is always before end
     if (!start.isEarlierThanOrEqual(end)) {
       var errMsg = "Validation bypassed, departure cannot be after arrival date" + start.toString() +
           " -> " + end.toString();
@@ -178,19 +177,19 @@ public class FlightFinderService {
     }
     Map<Integer, List<Integer>> ret = new HashMap<>();
     int[] yearsBetween = start.yearDiff(end);
-    boolean spansManyYears = yearsBetween.length > 1;
+    boolean spansOneYearOnly = yearsBetween.length < 2;
     Arrays.stream(yearsBetween).forEach(y -> {
       List<Integer> months = new ArrayList<>();
       boolean isFirstYear = (y == start.getYear());
       boolean isLastYear = (y == end.getYear());
-      if (!spansManyYears) {
+      if (spansOneYearOnly) {
         months.addAll(Arrays.asList(ArrayUtils.toObject(start.monthsDiff(end.getMonth()))));
-      } else if (spansManyYears && isFirstYear && !isLastYear) {
+      } else if (isFirstYear) {
         months.addAll(Arrays.asList(ArrayUtils.toObject(start.monthsDiff(12))));
-      } else if (spansManyYears && !isFirstYear && !isLastYear) {
-        months.addAll((List<Integer>) IntStream.rangeClosed(1, 12));
+      } else if (isLastYear) {
+        months.addAll(IntStream.rangeClosed(1, end.getMonth()).boxed().collect(Collectors.toList()));
       } else {
-        months.addAll((List<Integer>) IntStream.rangeClosed(1, end.getMonth()));
+        months.addAll(IntStream.rangeClosed(1, 12).boxed().collect(Collectors.toList()));
       }
       ret.put(y, months);
     });
