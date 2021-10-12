@@ -3,6 +3,7 @@ package com.qubits.task.models.pojos;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,9 +14,11 @@ public class Interconnection {
   List<Leg> legs;
 
   @JsonIgnore
+  @Getter(onMethod_=@JsonIgnore)
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   boolean isTransit;
   @JsonIgnore
+  @Getter(onMethod_=@JsonIgnore)
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   boolean isVisited;
 

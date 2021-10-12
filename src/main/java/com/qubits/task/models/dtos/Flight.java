@@ -1,12 +1,14 @@
 package com.qubits.task.models.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Flight {
   @JsonProperty("carrierCode")
   private String carrierCode;
