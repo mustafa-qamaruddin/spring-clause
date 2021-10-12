@@ -113,8 +113,8 @@ public class FlightFinderService {
                     .setStitchedArrivalDateTime(timeZoneUtils.stitchDateParts(sched.getYear(), sched.getMonth(),
                         day.getDay(), flight.getArrivalTime()));
                 return flight;
-              }).filter(flight -> flight.getStitchedDepartureDateTime().compareTo(desiredDepature.getRawDate()) > 0 &&
-                  flight.getStitchedArrivalDateTime().compareTo(desiredArrival.getRawDate()) < 0)
+              }).filter(flight -> flight.getStitchedDepartureDateTime().compareTo(desiredDepature.getRawDate()) >= 0 &&
+                  flight.getStitchedArrivalDateTime().compareTo(desiredArrival.getRawDate()) <= 0)
               .collect(Collectors.toList());
           day.setFlights(filteredFlights);
         });

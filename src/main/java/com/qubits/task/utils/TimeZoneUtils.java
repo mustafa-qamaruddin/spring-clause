@@ -33,7 +33,7 @@ public class TimeZoneUtils {
     }
     Calendar cal = Calendar.getInstance();
     var timeSplits = Arrays.stream(time.split(":")).map(Integer::parseInt).collect(Collectors.toList());
-    cal.set(year, month - 1, day - 1, timeSplits.get(0), timeSplits.get(1));
+    cal.set(year, month - 1, day, timeSplits.get(0), timeSplits.get(1));
     return cal.getTime();
   }
 
