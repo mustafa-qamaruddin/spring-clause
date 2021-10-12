@@ -1,5 +1,7 @@
 package com.qubits.task.utils;
 
+import com.qubits.task.exceptions.BadRequestErrorException;
+
 import javax.validation.ValidationException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -31,9 +33,10 @@ public class SearchFormUtils {
     return dates;
   }
 
-  public void isDepartureAlwaysBeforeArrival(Date departure, Date arrival) {
+  public void isDepartureEarlierThanArrival(Date departure, Date arrival) {
     if (departure.compareTo(arrival) > 0) {
-//      throw new ;
+      throw new BadRequestErrorException("Time travel is suspended until further notice. Departure must always be " +
+          "earlier than arrival", Map.of("departure", departure.toString(), "arrival", arrival.toString()));
     }
   }
 }

@@ -38,6 +38,7 @@ public class FlightFinderController {
   ) {
     var dates = searchFormUtils.parseDateTimes(Map.of("departure", departureDateTime, "arrival",
         arrivalDateTime));
+    searchFormUtils.isDepartureEarlierThanArrival(dates.get("departure"), dates.get("arrival"));
     return flightFinderService.findInterconnections(
         departure,
         arrival,

@@ -23,8 +23,6 @@ public class TimeZoneUtils {
     dateTimeFormatter = new SimpleDateFormat(DATETIME_FORMAT);
   }
 
-  //@todo covert from departure/arrival airport timezone to current user timezone
-
   public Date stitchDateParts(int year, int month, int day, String time) {
     if (Objects.isNull(time) || time.isEmpty() || time.isBlank()) {
       var msg = "Invalid time provided: " + time;

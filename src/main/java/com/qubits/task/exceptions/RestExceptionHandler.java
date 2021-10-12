@@ -174,6 +174,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
   }
 
   /**
+   * Handle BadRequestErrorException
+   */
+  @ExceptionHandler(BadRequestErrorException.class)
+  protected ResponseEntity<Object> handleBadRequestErrorException(BadRequestErrorException ex) {
+    var apiError = new ApiError(HttpStatus.NOT_FOUND, ex);
+    ex.getErrors().forEach((k, v) -> apiError.addSubError(new ApiValidationError(k, v)));
+    return buildResponseEntity(apiError);
+  }
+
+  /**
    * Handle DataIntegrityViolationException, inspects the cause for different DB causes.
    *
    * @param ex the DataIntegrityViolationException
