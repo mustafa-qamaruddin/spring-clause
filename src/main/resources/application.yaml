@@ -1,4 +1,24 @@
-airlines:
-  timezone: Europe/Madrid
-  routesAPI: https://services-api.ryanair.com
-  schedulesAPI: https://timtbl-api.ryanair.com
+server:
+  port: 8080
+
+santa:
+  security:
+    tokenIssuer: secret-santa
+    jwtSecret: FBjZZ6m9kN309DOjF7CLyvA8TSzwrjKi1i0H0xgnFtKtucP575URB_WcH4fp1osFGYgkAG6vnww0sZRHzRJllFWryOvfBwWHzrNehRC
+
+spring:
+  datasource:
+    url: jdbc:h2:file:./secret-santa;AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE;
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        show_sql: true
+        enable_lazy_load_no_trans: true
+  messages:
+    basename: messages,config.i18n.messages
+    fallback-to-system-locale: false
